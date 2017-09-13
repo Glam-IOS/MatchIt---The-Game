@@ -1,0 +1,96 @@
+//
+//  GameStartAnimation.swift
+//  MatchIt!
+//
+//  Created by Leo Glam on 7/8/17.
+//  Copyright © 2017 Leo Glam. All rights reserved.
+//
+
+import Foundation
+import SpriteKit
+
+class GameStartAnimation: SKScene{
+    
+    
+    /////////////////Global//////////////////
+    
+    let background = SKSpriteNode(imageNamed: "LaunchScreen")
+    
+    let taptostartlabel = SKLabelNode(fontNamed: "Caviar Dreams Bold")
+    
+    let GameNameLabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let moveup = SKAction.moveBy(x: 0, y: 1536, duration: 0.7)
+    
+    let movedown = SKAction.moveBy(x: 0, y: -1536, duration: 0.7)
+    
+    let BGBH = SKSpriteNode(imageNamed: "bg_MainBH")
+    
+    let BGTH = SKSpriteNode(imageNamed: "bg_MainTH")
+    
+    let SceneToMoveTo = GameScene(size: CGSize(width: 1536, height: 2048))
+    
+    let settings = SKSpriteNode(imageNamed: "settings")
+    
+    override func didMove(to view: SKView) {
+        
+        settings.position = CGPoint(x: self.size.width*0.17, y: (self.size.height*0.96) + 1536)
+        settings.zPosition = 3
+        settings.setScale(0.7)
+        self.addChild(settings)
+
+        
+        BGBH.size = BGBH.size
+        BGBH.position = CGPoint(x: self.size.width/2, y: self.size.height - 3072)
+        BGBH.zPosition = -1
+        self.addChild(BGBH)
+        
+        BGTH.size = BGTH.size
+        BGTH.position = CGPoint(x: self.size.width/2, y: self.size.height + 1024)
+        BGTH.zPosition = -1
+        self.addChild(BGTH)
+
+        
+        background.size = self.size
+        background.position = CGPoint(x: self.size.width/2, y: self.size.height/2)
+        background.zPosition = -2
+        self.addChild(background)
+        
+        taptostartlabel.text = "Play"
+        taptostartlabel.fontSize = 200
+        taptostartlabel.zPosition = 1
+        taptostartlabel.fontColor = SKColor.black
+        taptostartlabel.position = CGPoint(x: self.size.width/2 , y: (self.size.height*0.55) + 1536 )
+        self.addChild(taptostartlabel)
+        
+        GameNameLabel.text = "Color Balls"
+        GameNameLabel.fontSize = 200
+        GameNameLabel.position = CGPoint(x: self.size.width/2, y: (self.size.height*0.85) + 1536)
+        GameNameLabel.zPosition = 1
+        GameNameLabel.fontColor = SKColor.white
+        self.addChild(GameNameLabel)
+        
+        SceneToMoveTo.scaleMode = self.scaleMode
+        
+        var _ = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(Animation), userInfo: nil, repeats: false)
+    }
+    
+    
+    func Animation(){
+        taptostartlabel.run(movedown)
+        GameNameLabel.run(movedown)
+        BGTH.run(movedown)
+        BGBH.run(moveup)
+        settings.run(movedown)
+        
+        var _ = Timer.scheduledTimer(timeInterval: 0.8, target: self, selector: #selector(StartGame), userInfo: nil, repeats: false)
+        
+    }
+    
+    func StartGame(){
+        
+        self.view!.presentScene(SceneToMoveTo)
+        
+    }
+    
+}
