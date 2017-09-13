@@ -1,0 +1,861 @@
+//
+//  GameScene.swift
+//  MatchIt!
+//
+//  Created by Leo Glam on 7/1/17.
+//  Copyright © 2017 Leo Glam. All rights reserved.
+//
+
+import SpriteKit
+import GameplayKit
+import GoogleMobileAds
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
+   
+
+    
+    ///////////////Global ////////////
+    
+    let ChildSign = SKSpriteNode(imageNamed: "child")
+    
+    let EChildSign = SKSpriteNode(imageNamed: "child")
+    
+    var settingstouched = false
+    
+    var easymode = UserDefaults.standard.bool(forKey: "easymode")
+    
+    var playtouched = false
+    
+    let colormatchlabel = SKLabelNode(fontNamed: "Caviar Dreams Bold")
+    
+    let NormalLabel = SKLabelNode(fontNamed: "Caviar Dreams Bold")
+    
+    var previousNumber = 0
+    
+    let BGBH = SKSpriteNode(imageNamed: "bg_MainBH")
+    
+    let BGTH = SKSpriteNode(imageNamed: "bg_MainTH")
+    
+    var x = 0
+    
+    let TimerArray = [0.0,1.0,1.0,1.0]
+    
+    let scaleUp = SKAction.scale(to: 1, duration: 0.3)
+    
+    let scaleUp8 = SKAction.scale(to: 0.8, duration: 0.3)
+    
+    var NHS = false
+    
+    var HighScore = UserDefaults.standard.integer(forKey: "HSS")
+    
+    let BestLabel = SKLabelNode(fontNamed: "Caviar Dreams")
+   
+    let PlayFailSound = SKAction.playSoundFileNamed("fail.wav", waitForCompletion: false)
+    
+    let PlayPointSound = SKAction.playSoundFileNamed("PointSound.wav", waitForCompletion: false)
+    
+    let PlayTimerSound = SKAction.playSoundFileNamed("CountDown.wav", waitForCompletion: false)
+    
+    var MatchCheck = false
+    
+    var Gameround = 1
+    
+    var bgtype = ballwheelorder[0]
+    
+    var randomnumber = 0
+    
+    var ball = Ball(type: .Blue)
+    
+    var Gbackground = Bg()
+    
+    let background = SKSpriteNode(imageNamed: "bg_Main")
+    
+    let settings = SKSpriteNode(imageNamed: "settings")
+    
+    let settingslabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    var colorballsbase = SKShapeNode()
+    
+    let spinballs = SKAction.rotate(byAngle: -ConvertDtoR(degrees: 360/6), duration: 0.2)
+    
+    let Gsquare = SKShapeNode (rectOf: CGSize(width: 200, height: 200))
+    
+    var currentgamestate: GameState = GameState.Bgame
+   
+    let taptostartlabel = SKLabelNode(fontNamed: "Caviar Dreams Bold")
+   
+    let GameNameLabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let GameScore = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let GameOver = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    var GSCount = 3
+    
+    let TimerLabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let ttrs = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let NHSlabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let EBestLabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let EGameScore = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    let easymodelabel = SKLabelNode(fontNamed: "Caviar Dreams Bold")
+    
+    let scaleDown = SKAction.scale(to: 0, duration: 0.2)
+    
+    let TickMark = SKSpriteNode(imageNamed: "tickmark")
+    
+    
+    //////////////////// Game Start /////////////
+    
+    override func didMove(to view: SKView) {
+        
+        Score = 0
+        
+        
+        
+        self.physicsWorld.contactDelegate = self
+      
+        settings.position = CGPoint(x: self.size.width*0.17, y: self.size.height*0.96)
+        settings.zPosition = 3
+        settings.setScale(0.7)
+        self.addChild(settings)
+        
+        ChildSign.position = CGPoint(x: self.size.width*0.22, y: self.size.height*0.96)
+        ChildSign.zPosition = 3
+        ChildSign.setScale(0)
+        self.addChild(ChildSign)
+        
+        EChildSign.position = CGPoint(x: self.size.width*0.2, y: (self.size.height*0.86) - 1536 )
+        EChildSign.zPosition = 4
+        EChildSign.setScale(2)
+        
+        if easymode == true{
+            
+            ChildSign.run(scaleUp8)
+            HighScore = UserDefaults.standard.integer(forKey: "KHSS")
+        }else{
+            
+            HighScore = UserDefaults.standard.integer(forKey: "HSS")
+            
+        }
+        
+        settingslabel.position = CGPoint(x: self.size.width/2 , y: self.size.height*0.73 )
+        settingslabel.zPosition = 3
+        settingslabel.fontSize = 100
+        settingslabel.fontColor = SKColor.black
+        settingslabel.setScale(0)
+        settingslabel.text = "Settings"
+        self.addChild(settingslabel)
+        
+        background.position = CGPoint(x: self.size.width/2, y: self.size.height/2)
+        background.zPosition = -4
+        background.size = self.size
+        self.addChild(background)
+        
+        colorballsbase = SKShapeNode(rectOf: CGSize(width: self.size.width * 0.8, height: self.size.width * 0.8))
+        colorballsbase.position = CGPoint(x: self.size.width/2, y: self.size.height/2)
+        colorballsbase.fillColor = SKColor.clear
+        colorballsbase.strokeColor = SKColor.clear
+        self.addChild(colorballsbase)
+        
+        
+        Gsquare.position =  CGPoint(x: self.size.width/2, y: self.size.height*0.25)
+        Gsquare.zPosition = -2
+        Gsquare.fillColor = SKColor.clear
+        Gsquare.strokeColor = SKColor.clear
+        Gsquare.lineWidth = 7
+        Gsquare.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 200, height: 200))
+        Gsquare.physicsBody!.affectedByGravity = false
+        Gsquare.physicsBody!.collisionBitMask = PhysicCat.None
+        Gsquare.physicsBody!.contactTestBitMask = PhysicCat.Ball
+        self.addChild(Gsquare)
+     
+        
+        taptostartlabel.text = "Play"
+        taptostartlabel.fontSize = 200
+        taptostartlabel.zPosition = 3
+        taptostartlabel.fontColor = SKColor.black
+        taptostartlabel.position = CGPoint(x: self.size.width/2 , y: self.size.height*0.55 )
+        self.addChild(taptostartlabel)
+    
+        NormalLabel.text = "Normal"
+        NormalLabel.fontSize = 120
+        NormalLabel.zPosition = 3
+        NormalLabel.setScale(0)
+        NormalLabel.fontColor = SKColor.black
+        NormalLabel.position = CGPoint(x: (self.size.width/2) , y: self.size.height*0.4 )
+        self.addChild(NormalLabel)
+        
+        colormatchlabel.text = "Double Danger"
+        colormatchlabel.fontSize = 120
+        colormatchlabel.zPosition = 3
+        colormatchlabel.fontColor = SKColor.black
+        colormatchlabel.setScale(0)
+        colormatchlabel.position = CGPoint(x: (self.size.width/2) , y: self.size.height*0.22 )
+        self.addChild(colormatchlabel)
+        
+        GameNameLabel.text = "Color Balls"
+        GameNameLabel.fontSize = 200
+        GameNameLabel.position = CGPoint(x: self.size.width/2, y: self.size.height*0.85)
+        GameNameLabel.zPosition = 3
+        GameNameLabel.fontColor = SKColor.white
+        self.addChild(GameNameLabel)
+        
+        
+        GameScore.text = "Score : \(Score)"
+        GameScore.fontSize = 200
+        GameScore.position = CGPoint(x: self.size.width/2, y: self.size.height*0.89)
+        GameScore.zPosition = -2
+        GameScore.setScale(0)
+        GameScore.color = SKColor.white
+        self.addChild(GameScore)
+        
+        EGameScore.text = "Score : \(Score)"
+        EGameScore.fontSize = 200
+        EGameScore.position = CGPoint(x: self.size.width/2, y: self.size.height*0.89)
+        EGameScore.zPosition = 3
+        EGameScore.setScale(1)
+        EGameScore.color = SKColor.white
+        
+        
+        BestLabel.text = "Best : \(HighScore)"
+        BestLabel.fontSize = 100
+        BestLabel.position = CGPoint(x: self.size.width/2, y: self.size.height*0.82)
+        BestLabel.zPosition = -2
+        BestLabel.fontColor = SKColor.black
+        BestLabel.setScale(0)
+        self.addChild(BestLabel)
+        
+        
+        
+        EBestLabel.text = "Best : \(HighScore)"
+        EBestLabel.fontSize = 100
+        EBestLabel.position = CGPoint(x: self.size.width/2, y: self.size.height*0.82)
+        EBestLabel.zPosition = 3
+        EBestLabel.fontColor = SKColor.black
+        EBestLabel.setScale(1)
+        
+        
+        TimerLabel.fontSize = 300
+        TimerLabel.position = CGPoint(x: self.size.width/2, y: self.size.height*0.45)
+        TimerLabel.zPosition = 4
+        TimerLabel.setScale(0)
+        TimerLabel.fontColor = SKColor.black
+        self.addChild(TimerLabel)
+        
+        GameOver.text = "GAME OVER"
+        GameOver.fontSize = 190
+        GameOver.position = CGPoint(x: self.size.width/2, y: (self.size.height*0.88) + 1536)
+        GameOver.zPosition = 4
+        GameOver.fontColor = SKColor.lightGray
+        
+        ttrs.text = "tap to restart"
+        ttrs.fontSize = 100
+        ttrs.position = CGPoint(x: self.size.width/2, y: (self.size.height*0.1) - 1536)
+        ttrs.zPosition = 3
+        ttrs.fontColor = SKColor.white
+    
+        NHSlabel.text = "NEW HIGHSCORE!"
+        NHSlabel.fontSize = 130
+        NHSlabel.position = CGPoint(x: self.size.width/2, y: (self.size.height*0.225) - 1536)
+        NHSlabel.zPosition = 3
+        NHSlabel.fontColor = SKColor.magenta
+        sety()
+        
+        
+        BGBH.size = BGBH.size
+        BGBH.position = CGPoint(x: self.size.width/2, y: self.size.height - 1536)
+        BGBH.zPosition = -1
+        self.addChild(BGBH)
+    
+        BGTH.size = BGTH.size
+        BGTH.position = CGPoint(x: self.size.width/2, y: self.size.height - 512)
+        BGTH.zPosition = -1
+        self.addChild(BGTH)
+        
+        easymodelabel.text = "Child Mode"
+        easymodelabel.fontColor = SKColor.black
+        easymodelabel.zPosition = 3
+        easymodelabel.fontSize = 100
+        easymodelabel.position = CGPoint(x: (self.size.width/2) , y: self.size.height*0.56 )
+        easymodelabel.setScale(0)
+        self.addChild(easymodelabel)
+        
+        
+        TickMark.position = CGPoint(x: (self.size.width/2) + 360 , y: self.size.height*0.58 )
+        TickMark.zPosition = 3
+        TickMark.setScale(0)
+        self.addChild(TickMark)
+    }
+    
+    
+    
+    
+    
+    func UpdateGSCounter(){
+        
+        if GSCount != 0 {
+           TimerLabel.text = "\(GSCount)"
+            GSCount -= 1
+            x += 1
+            PGtimer()
+            print(TimerArray[x])
+        }
+        
+    }
+    
+    func prepballswheel() {
+        
+        for i in 0...5{
+        
+             ball = Ball(type: ballwheelorder[i])
+        let basepos = CGPoint(x: self.size.width/2, y: self.size.height*0.25)
+        ball.setScale(0.5)
+        ball.position = convert(basepos, to: colorballsbase)
+        ball.zPosition = -2
+            
+        colorballsbase.addChild(ball)
+         
+            colorballsbase.zRotation += ConvertDtoR(degrees: 360/6)
+            }
+        }
+    
+    func bgcreate (){
+        
+         Gbackground = Bg()
+        Gbackground.size = self.size
+        Gbackground.position = CGPoint(x: self.size.width/2, y: self.size.height/2)
+        Gbackground.zPosition = -3
+        self.addChild(Gbackground)
+        
+    }
+    
+   ///////////////// bg changing shit /////////////
+    func sety(){
+            createrandom()
+            bgtype = ballwheelorder[randomnumber]
+    }
+    
+    func bgchange(){
+        sety()
+        bgchangestep()
+        
+        
+    }
+
+    func bgchangestep(){
+        
+    Gbackground.texture = SKTexture(imageNamed: "bg_\(bgtype)")
+        
+    }
+    
+
+    
+    func createrandom(){
+        
+        randomnumber = Int(arc4random()%6)
+        while previousNumber == randomnumber {
+            randomnumber = Int(arc4random()%6)
+        }
+        previousNumber = randomnumber
+    }
+    
+    
+    func timerdone(){
+        
+                Gtimer()
+        
+        
+    
+    }
+    
+    
+    func RealTimer(){
+    
+        
+        timerdone()
+        
+    }
+    
+   
+    func SetUp(){
+    
+        
+        let scaleDown = SKAction.scale(to: 0, duration: 0.2)
+        let deletelabel = SKAction.removeFromParent()
+        let deleteSeq = SKAction.sequence([scaleDown, deletelabel])
+        let scaleUp = SKAction.scale(to: 1, duration: 0.2)
+        
+        Gsquare.strokeColor = SKColor.darkGray
+        prepballswheel()
+        GameScore.run(scaleUp)
+        BestLabel.run(scaleUp)
+        TimerLabel.run(deleteSeq)
+
+        let moveup = SKAction.moveBy(x: 0, y: 1536, duration: 1.3)
+        let movedown = SKAction.moveBy(x: 0, y: -1536, duration: 1.3)
+        
+        BGTH.run(moveup)
+        BGBH.run(movedown)
+        
+        bgcreate()
+        bgchange()
+    }
+
+    
+    ///////////normal game start commands ///////////
+    func StartTheGame(){
+        
+        
+        let scaleDown = SKAction.scale(to: 0, duration: 0.2)
+        let deletelabel = SKAction.removeFromParent()
+        let deleteSeq = SKAction.sequence([scaleDown, deletelabel])
+        let request = GADRequest()
+        BannerAd.load(request)
+        
+        var _ = Timer.scheduledTimer(timeInterval: 3.1, target: self, selector: #selector(RealTimer), userInfo: nil, repeats: false)
+        
+        var _ = Timer.scheduledTimer(timeInterval: 2.5, target: self, selector: #selector(SetUp), userInfo: nil, repeats: false)
+        
+        ChildSign.zPosition = -2
+        self.run(PlayTimerSound)
+        PGtimer()
+        TimerLabel.text = "\(GSCount)"
+        TimerLabel.run(scaleUp)
+        NormalLabel.run(deleteSeq)
+        colormatchlabel.run(deleteSeq)
+        settings.run(deleteSeq)
+        ChildSign.position = CGPoint(x: self.size.width * 0.34, y: self.size.height*0.84)
+        
+        currentgamestate = .Igame
+        
+        GameNameLabel.run(deleteSeq)
+        taptostartlabel.run(deleteSeq)
+        
+        
+    }
+    
+    
+    func PGtimer() {
+    var _ = Timer.scheduledTimer(timeInterval: TimerArray[x], target: self, selector: #selector(UpdateGSCounter), userInfo: nil, repeats: false)
+    }
+    
+    
+    
+    
+    //////////////////ColorMatchStart commands/////////////////////
+    
+    
+    
+    
+    
+    func ColorMatchStart() {
+        
+        
+        let scaleDown = SKAction.scale(to: 0, duration: 0.2)
+        let deletelabel = SKAction.removeFromParent()
+        let deleteSeq = SKAction.sequence([scaleDown, deletelabel])
+        
+        NormalLabel.run(deleteSeq)
+        colormatchlabel.run(deleteSeq)
+        settings.run(deleteSeq)
+        GameNameLabel.run(deleteSeq)
+        taptostartlabel.run(deleteSeq)
+        currentgamestate = .Igame
+        var _ = Timer.scheduledTimer(timeInterval:0.2, target: self, selector: #selector(movesceneCM), userInfo: nil, repeats: false)
+        
+
+        
+    }
+    
+    func movesceneCM(){
+        let SceneToMoveTo = ColorMatchScene(size: CGSize(width: 1536, height: 2048))
+        SceneToMoveTo.scaleMode = self.scaleMode
+        self.view!.presentScene(SceneToMoveTo)
+        
+    }
+    
+    
+    
+    /////////////////// Touch //////////////////////
+    override func touchesBegan(_ touches : Set<UITouch>, with event: UIEvent?) {
+        for touch: AnyObject in touches{
+        
+            let pointitouched = touch.location(in: self)
+            
+            
+            
+            /////////easymode////////
+            if UserDefaults.standard.bool(forKey: "easymode") == false{
+            
+            if easymodelabel.contains(pointitouched){
+                
+                ChildSign.run(scaleUp8)
+                TickMark.run(scaleUp)
+                easymode = true
+                UserDefaults.standard.set(easymode, forKey: "easymode")
+                HighScore = UserDefaults.standard.integer(forKey: "KHSS")
+                BestLabel.text = "Best : \(HighScore)"
+                print(easymode)
+                print(UserDefaults.standard.bool(forKey: "easymode"))
+            }
+            } else {
+                
+                if easymodelabel.contains(pointitouched){
+                    
+                    ChildSign.run(scaleDown)
+                    TickMark.run(scaleDown)
+                    HighScore = UserDefaults.standard.integer(forKey: "HSS")
+                    BestLabel.text = "Best : \(HighScore)"
+                    easymode = false
+                    UserDefaults.standard.set(easymode, forKey: "easymode")
+                    
+                }
+                
+            }
+            
+            
+            
+            
+            
+            //setting touch
+        if settingstouched == false{
+            
+            if settings.contains(pointitouched){
+                
+                
+                settingsmenu()
+                
+                if easymode == true{
+                    TickMark.run(scaleUp)
+                    
+                }
+                
+            }
+            
+
+            
+        }else{
+            if settings.contains(pointitouched){
+                TickMark.run(scaleDown)
+                settings.texture = SKTexture(imageNamed: "settings")
+                Goback()
+            }
+            }
+            
+            
+            
+            
+            
+            //gametouch
+            if currentgamestate == .Bgame{
+            //Start The Game
+            
+            if taptostartlabel.contains(pointitouched){
+               Selectionpopup()
+            }
+        if playtouched == true {
+            if NormalLabel.contains(pointitouched){
+                StartTheGame()
+            }
+        
+            if colormatchlabel.contains(pointitouched){
+                
+                ColorMatchStart()
+                
+                
+            }
+            
+            }
+        
+        
+        }
+        else if currentgamestate == .Igame{
+        
+            colorballsbase.run(spinballs)
+            
+        }else if currentgamestate == .Agame{
+            
+            Gameround == 1
+            let newScene = GameScene(size: self.size)
+            newScene.scaleMode = self.scaleMode
+            let animation = SKTransition.fade(withDuration: 0.5 )
+            self.view?.presentScene(newScene, transition: animation)
+        }
+        
+        
+        }
+        
+    }
+
+    
+    
+    
+    
+    
+    //////////////////////////// Selection ////////////////////////
+    
+    
+    func Selectionpopup(){
+        
+        let scaleUp = SKAction.scale(to: 1, duration: 0.2)
+        
+        NormalLabel.run(scaleUp)
+        playtouched  = true
+        colormatchlabel.run(scaleUp)
+        
+    }
+    
+    
+    
+    func settingsmenu(){
+        
+        let scaleDown = SKAction.scale(to: 0, duration: 0.2)
+        let scaleUp = SKAction.scale(to: 1, duration: 0.2)
+        
+        
+        settings.texture = SKTexture(imageNamed: "back")
+        easymodelabel.run(scaleUp)
+        NormalLabel.run(scaleDown)
+        colormatchlabel.run(scaleDown)
+        taptostartlabel.run(scaleDown)
+        settingslabel.run(scaleUp)
+        settingstouched = true
+        
+        
+    }
+    
+    
+    
+    
+    func Goback(){
+        
+        easymodelabel.run(scaleDown)
+        taptostartlabel.run(scaleUp)
+        playtouched = false
+        settingslabel.run(scaleDown)
+        settingstouched = false
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /////////////////////Contact//////////////////////////
+ 
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        let contactball: Ball
+        let GS: SKShapeNode
+        
+        if contact.bodyA.categoryBitMask == PhysicCat.Ball{
+            contactball = contact.bodyA.node! as! Ball
+            GS = contact.bodyB.node! as! SKShapeNode
+        }else{
+            contactball = contact.bodyB.node! as! Ball
+            GS = contact.bodyA.node! as! SKShapeNode
+            
+        }
+        
+        
+        
+        
+        
+        
+        if contactball.type == bgtype{
+            
+            MatchCheck = true
+            
+            print("CheckTrue")
+        }
+        
+            if contactball.type != bgtype{
+                
+                MatchCheck = false
+                print("CheckFalse")
+            }
+        
+        
+        
+     
+        }
+    
+    
+   
+    ////////////////////Gameplay/////////////////
+    
+    func Gtimer() {
+       
+        
+        if Score > HighScore {
+            
+            BestLabel.text = "Best : \(Score)"
+            
+        }
+        
+         GameScore.text = "Score : \(Score)"
+        Gsquare.strokeColor = SKColor.darkGray
+        let pointper = [2,1.6,1.6,1.6,1.6,1.4,1.4,1.4,1.4,1.4,1.4,1.4,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1.2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.6,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4]
+        
+        let pointperk = [3,3,3,3,3,3,3,3,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.8,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.6,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.4,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2.2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.8,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.6,1.4,1.4,1.4,1.4,1.4,1.4,1.4,1.4,1.4,1.4,1.4,1.4]
+        print(pointper.count)
+        Gameround += 1
+        
+        if easymode == false {
+        var _ = Timer.scheduledTimer(timeInterval: pointper[Gameround], target: self, selector: #selector(CheckColor), userInfo: nil, repeats: false)
+        }
+        
+        if easymode == true {
+           print("Easy PZ")
+            var _ = Timer.scheduledTimer(timeInterval: pointperk[Gameround], target: self, selector: #selector(CheckColor), userInfo: nil, repeats: false)
+            
+        }
+    
+   
+    }
+    
+    
+    func CheckColor() {
+        
+        print(MatchCheck)
+        print("timer done")
+        if MatchCheck == true {
+            
+           
+            self.run(PlayPointSound)
+            Score += 1
+            var _ = Timer.scheduledTimer(timeInterval: 0.4, target: self, selector: #selector(Gtimer), userInfo: nil, repeats: false)
+            bgchange()
+            Gsquare.strokeColor = SKColor.green
+            MatchCheck = false
+        }else{
+            
+            self.run(PlayFailSound)
+            currentgamestate = .Pgame
+            GameEnd()
+        
+            
+        }
+        
+        
+        
+    }
+    
+    
+    func setupendscreen(){
+        BestLabel.zPosition = -2
+        GameScore.zPosition = -2
+        Gsquare.zPosition = -2
+        colorballsbase.zPosition = -3
+        background.zPosition = -4
+        settings.zPosition = -2
+        background.texture = SKTexture(imageNamed: "bg_\(bgtype)")
+        self.addChild(GameOver)
+        self.addChild(ttrs)
+        self.addChild(EBestLabel)
+        self.addChild(EChildSign)
+        self.addChild(EGameScore)
+        EBestLabel.fontSize = 200
+        EGameScore.fontSize = 400
+        EGameScore.text = "\(Score)"
+        EBestLabel.text = "Best : \(HighScore)"
+        EBestLabel.fontColor = SKColor.white
+        let scoresetpos = SKAction.moveBy(x: 0, y: -600, duration: 0)
+        let moveupscore = SKAction.moveBy(x: 0, y: 1536, duration: 0)
+        let bestsetpos = SKAction.moveBy(x: 0, y: -900, duration: 0)
+        let moveup = SKAction.moveBy(x: 0, y: 1536, duration: 0.7)
+        let movedown = SKAction.moveBy(x: 0, y: -1536, duration: 0.7)
+        let movedownbest = SKAction.moveBy(x: 0, y: -1536, duration: 0)
+        GameOver.run(movedown)
+        ttrs.run(moveup)
+        EGameScore.run(scoresetpos)
+        EBestLabel.run(bestsetpos)
+        EChildSign.run(bestsetpos)
+        EGameScore.run(moveupscore)
+        EBestLabel.run(movedownbest)
+        if easymode == true{
+        EChildSign.run(moveup)
+        }
+        BGTH.run(movedown)
+        BGBH.run(moveup)
+        EGameScore.run(movedown)
+        EBestLabel.run(moveup)
+        Gbackground.removeFromParent()
+        currentgamestate = .Agame
+        if NHS == true {
+            
+            self.addChild(NHSlabel)
+            NHSlabel.run(moveup)
+        }
+        
+    }
+    
+    
+    
+    
+    func GameEnd () {
+        
+        if easymode == true {
+            
+            if Score > HighScore {
+                NHS = true
+                HighScore = Score
+                UserDefaults.standard.set(HighScore, forKey: "KHSS")
+            }
+        }
+        
+        if Score > HighScore {
+            NHS = true
+            HighScore = Score
+            UserDefaults.standard.set(HighScore, forKey: "HSS")
+        }
+        
+        SquareFlash()
+        Gsquare.strokeColor = SKColor.red
+        colorballsbase.removeAllActions()
+        let wait2switch = SKAction.wait(forDuration: 2.2)
+        let changescene = SKAction.run {
+         
+            self.setupendscreen()
+            
+            
+            }
+        
+        let scenechangeseq = SKAction.sequence([wait2switch, changescene])
+        self.run(scenechangeseq)
+        
+    }
+    
+   
+    
+    func SquareFlash(){
+        
+        let FadeOut = SKAction.fadeOut(withDuration: 0.3)
+        let Fadein = SKAction.fadeIn(withDuration: 0.3)
+        let FlashSeq = SKAction.sequence([FadeOut,Fadein])
+        let Flash = SKAction.repeat(FlashSeq, count: 3)
+        
+        Gsquare.run(Flash)
+    
+
+    
+    
+    
+    
+    }
+    
+}
