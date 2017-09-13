@@ -1,0 +1,376 @@
+//
+//  ColorMatchMode.swift
+//  MatchIt!
+//
+//  Created by Leo Glam on 7/10/17.
+//  Copyright © 2017 Leo Glam. All rights reserved.
+//
+
+import Foundation
+import SpriteKit
+import GoogleMobileAds
+
+class ColorMatchScene: SKScene, SKPhysicsContactDelegate{
+    
+    //variables:: 
+    
+    var Gsquare1Bool = false
+    
+    var Gsquare2Bool = false
+    
+    var MatchCheck1 = false
+    
+    var MatchCheck2 = false
+    
+    var Gsquare1 = SKShapeNode (rectOf: CGSize(width: 200, height: 200))
+    
+    var Gsquare2 = SKShapeNode (rectOf: CGSize(width: 200, height: 200))
+    
+    let BGBH = SKSpriteNode(imageNamed: "bg_MainBH")
+    
+    let BGTH = SKSpriteNode(imageNamed: "bg_MainTH")
+    
+    let bg = SKSpriteNode(imageNamed: "ComingSoon")
+    
+    let gbg1 = Bg()
+    
+    let gbg2 = Bg()
+    
+    let PlayTimerSound = SKAction.playSoundFileNamed("CountDown.wav", waitForCompletion: false)
+    
+    var x = 0
+    
+    let TimerArray = [0.0,1.0,1.0,1.0]
+    
+    let TimerLabel = SKLabelNode(fontNamed: "Caviar Dreams")
+    
+    var GSCount = 3
+    
+    let scaleUp = SKAction.scale(to: 1, duration: 0.3)
+    
+    let SceneToMoveTo = GameScene(size: CGSize(width: 1536, height: 2048))
+    
+    var ball = Ball(type: .Blue)
+    
+    var colorballsbase = SKShapeNode()
+    
+    var GameState = 0
+    
+    let spinballs = SKAction.rotate(byAngle: -ConvertDtoR(degrees: 360/6), duration: 0.2)
+    
+    //GameState 0 = Counter // Gamestate 1 = In-game // Gamestate 3 = Endscreen
+    
+    var randomnumber1 = 0
+    
+    var previousNumber1 = 0
+  
+    var randomnumber2 = 0
+    
+    var previousNumber2 = 0
+    
+    var bgtype = ballwheelorder[0]
+    
+    
+    
+    //////////////////////Gamemode:
+    
+    override func didMove(to view: SKView) {
+        
+        
+        self.physicsWorld.contactDelegate = self
+        
+        TimerLabel.fontSize = 300
+        TimerLabel.position = CGPoint(x: self.size.width/2, y: self.size.height*0.45)
+        TimerLabel.zPosition = 3
+        TimerLabel.setScale(0)
+        TimerLabel.fontColor = SKColor.black
+        self.addChild(TimerLabel)
+        
+        BGBH.size = BGBH.size
+        BGBH.position = CGPoint(x: self.size.width/2, y: self.size.height - 1536)
+        BGBH.zPosition = 2
+        self.addChild(BGBH)
+        
+        BGTH.size = BGTH.size
+        BGTH.position = CGPoint(x: self.size.width/2, y: self.size.height - 512)
+        BGTH.zPosition = 2
+        self.addChild(BGTH)
+    
+        
+        colorballsbase = SKShapeNode(rectOf: CGSize(width: self.size.width * 0.8, height: self.size.width * 0.8))
+        colorballsbase.position = CGPoint(x: self.size.width/2, y: self.size.height/2)
+        colorballsbase.fillColor = SKColor.clear
+        colorballsbase.strokeColor = SKColor.clear
+        self.addChild(colorballsbase)
+        
+        bg.size = self.size
+        bg.position = CGPoint(x: self.size.width/2, y: self.size.height)
+        bg.zPosition = -5
+        self.addChild(bg)
+        
+        gbg1.size = self.size
+        gbg1.position = CGPoint(x: self.size.width/2, y: self.size.height - self.size.height)
+        gbg1.zPosition = -4
+        self.addChild(gbg1)
+        
+        gbg2.size = self.size
+        gbg2.position = CGPoint(x: self.size.width/2, y: self.size.height)
+        gbg2.zPosition = -4
+        self.addChild(gbg2)
+        
+        
+        Gsquare1.position =  CGPoint(x: self.size.width/2, y: self.size.height*0.25)
+        Gsquare1.zPosition = 1
+        Gsquare1.fillColor = SKColor.clear
+        Gsquare1.strokeColor = SKColor.clear
+        Gsquare1.lineWidth = 7
+        Gsquare1.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 200, height: 200))
+        Gsquare1.physicsBody!.affectedByGravity = false
+        Gsquare1.physicsBody!.categoryBitMask = PhysicCat.Gsquare1
+        Gsquare1.physicsBody!.collisionBitMask = PhysicCat.None
+        Gsquare1.physicsBody!.contactTestBitMask = PhysicCat.Ball
+        self.addChild(Gsquare1)
+        
+        Gsquare2.position =  CGPoint(x: self.size.width/2, y: self.size.height*0.75)
+        Gsquare2.zPosition = 1
+        Gsquare2.fillColor = SKColor.clear
+        Gsquare2.strokeColor = SKColor.clear
+        Gsquare2.lineWidth = 7
+        Gsquare2.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 200, height: 200))
+        Gsquare2.physicsBody!.affectedByGravity = false
+        Gsquare2.physicsBody!.categoryBitMask = PhysicCat.Gsquare2
+        Gsquare2.physicsBody!.collisionBitMask = PhysicCat.None
+        Gsquare2.physicsBody!.contactTestBitMask = PhysicCat.Ball
+        self.addChild(Gsquare2)
+        
+        SceneToMoveTo.scaleMode = self.scaleMode
+        
+        var _ = Timer.scheduledTimer(timeInterval: 2.5, target: self, selector: #selector(SetUp), userInfo: nil, repeats: false)
+        
+        self.run(PlayTimerSound)
+        
+        TimerLabel.run(scaleUp)
+        PGtimer()
+    }
+    
+    
+    
+    func PGtimer() {
+        var _ = Timer.scheduledTimer(timeInterval: TimerArray[x], target: self, selector: #selector(UpdateGSCounter), userInfo: nil, repeats: false)
+    }
+    
+    func UpdateGSCounter(){
+        
+        if GSCount != 0 {
+            TimerLabel.text = "\(GSCount)"
+            GSCount -= 1
+            x += 1
+            PGtimer()
+            print(TimerArray[x])
+            
+        }
+        
+    }
+    
+    func prepballswheel() {
+        
+        for i in 0...5{
+            
+            ball = Ball(type: ballwheelorder[i])
+            let basepos = CGPoint(x: self.size.width/2, y: self.size.height*0.25)
+            ball.setScale(0.5)
+            ball.position = convert(basepos, to: colorballsbase)
+            ball.zPosition = -2
+            
+            colorballsbase.addChild(ball)
+            
+            colorballsbase.zRotation += ConvertDtoR(degrees: 360/6)
+        }
+    }
+
+    
+    func SetUp(){
+        
+        
+        let scaleDown = SKAction.scale(to: 0, duration: 0.2)
+        let deletelabel = SKAction.removeFromParent()
+        let deleteSeq = SKAction.sequence([scaleDown, deletelabel])
+        //let scaleUp = SKAction.scale(to: 1, duration: 0.2)
+        
+        Gsquare1.strokeColor = SKColor.darkGray
+        Gsquare2.strokeColor = SKColor.darkGray
+        prepballswheel()
+        //GameScore.run(scaleUp)
+        //BestLabel.run(scaleUp)
+        TimerLabel.run(deleteSeq)
+        
+        let moveup = SKAction.moveBy(x: 0, y: 1536, duration: 1.3)
+        let movedown = SKAction.moveBy(x: 0, y: -1536, duration: 1.3)
+        
+        BGTH.run(moveup)
+        BGBH.run(movedown)
+        GameState = 1
+        bgchange1()
+        bgchange2()
+        
+    }
+
+    ///////////////// bg changing shit (bg1)/////////////
+    
+    func sety1(){
+        createrandom1()
+        bgtype = ballwheelorder[randomnumber1]
+    }
+    
+    func bgchange1(){
+    sety1()
+        bgchangestep1()
+    
+    
+    }
+   
+    func bgchangestep1(){
+    
+        gbg1.texture = SKTexture(imageNamed: "bg_\(bgtype)")
+    
+    }
+
+    func createrandom1(){
+    
+        randomnumber1 = Int(arc4random()%6)
+        while previousNumber1 == randomnumber1 {
+            randomnumber1 = Int(arc4random()%6)
+        }
+        previousNumber1 = randomnumber1
+    }
+
+    
+    ///////////////// bg changing shit (bg2)/////////////
+    func sety2(){
+        createrandom2()
+        bgtype = ballwheelorder[randomnumber2]
+    }
+    
+    func bgchange2(){
+        sety2()
+       bgchangestep2()
+        
+        
+    }
+    
+    func bgchangestep2(){
+        
+        gbg2.texture = SKTexture(imageNamed: "bg_\(bgtype)")
+        
+    }
+    
+    func createrandom2(){
+        
+        randomnumber2 = Int(arc4random()%6)
+        while previousNumber2 == randomnumber2 {
+            randomnumber2 = Int(arc4random()%6)
+        }
+        while randomnumber2 == randomnumber1{
+            randomnumber2 = Int(arc4random()%6)
+        }
+        previousNumber2 = randomnumber2
+    }
+
+    
+    
+    
+    
+    ///////////Touch//////////////
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+         if GameState == 0 {
+            
+          print("Counter")
+            
+        }
+        
+        if GameState == 1 {
+          
+          colorballsbase.run(spinballs)
+        }
+    
+        
+    }
+    
+    
+    
+    ////////////// contact ///////////
+    
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        let contactball: Ball
+        
+        if contact.bodyA.categoryBitMask == PhysicCat.Ball{
+            contactball = contact.bodyA.node! as! Ball
+        }else{
+            contactball = contact.bodyB.node! as! Ball
+            
+        }
+        
+        
+        if contact.bodyA.categoryBitMask == PhysicCat.Gsquare1{
+            Gsquare1Bool = true
+            Gsquare2Bool = false
+        }else if contact.bodyB.categoryBitMask == PhysicCat.Gsquare1{
+            Gsquare1Bool = true
+            Gsquare2Bool = false
+        }
+        
+        
+        if contact.bodyA.categoryBitMask == PhysicCat.Gsquare2{
+            Gsquare1Bool = false
+            Gsquare2Bool = true
+        }else if contact.bodyB.categoryBitMask == PhysicCat.Gsquare2{
+            Gsquare1Bool = false
+            Gsquare2Bool = true
+        }
+
+        
+        
+        if Gsquare2Bool == true {
+            if contactball.type == gbg2.type{
+            
+            MatchCheck2 = true
+            
+            print("Check2True")
+            }
+        
+            if contactball.type != gbg2.type{
+            
+            MatchCheck2 = false
+            }
+       
+        }
+        
+        
+        
+        if Gsquare1Bool == true {
+            if contactball.type == gbg1.type{
+                
+                MatchCheck1 = true
+                
+                print("Check1True")
+                }
+            
+                if contactball.type != gbg1.type{
+                
+                MatchCheck1 = false
+                }
+            
+            }
+        
+    }
+    
+    
+    ///////// End Of Contact///////
+    
+    
+    
+    
+}
